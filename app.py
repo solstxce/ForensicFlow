@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, Blueprint
 from flask_restx import Api, Resource, fields, Namespace
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
@@ -20,10 +20,16 @@ authorizations = {
     },
 }
 
-api = Api(app, version='1.0', title='ForensicFlow API',
+# Create a Blueprint for the API
+api_bp = Blueprint('api', __name__, url_prefix='/api')
+api = Api(api_bp, version='1.0', title='ForensicFlow API',
           description='A digital forensics API with email analysis capabilities',
           authorizations=authorizations,
-          security='Bearer Auth')
+          security='Bearer Auth',
+          doc='/docs')  # Swagger UI will be available at /api/docs
+
+# Register the Blueprint with the app
+app.register_blueprint(api_bp)
 
 # Configure MongoDB
 app.config["MONGO_URI"] = "mongodb://localhost:27017/forensicflow"
