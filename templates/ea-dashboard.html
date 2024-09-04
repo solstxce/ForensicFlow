@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analysis Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Email Analysis Dashboard</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Upload Email for Analysis</h2>
+            <form id="email-analysis-form" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label for="email-file" class="block text-sm font-medium text-gray-700">Upload .eml file</label>
+                    <input type="file" id="email-file" name="file" accept=".eml" class="mt-1 block w-full" required>
+                </div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Analyze Email
+                </button>
+            </form>
+        </div>
+
+        <div id="analysis-result" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Analysis Result</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Email Details</h3>
+                    <p><strong>Subject:</strong> <span id="email-subject"></span></p>
+                    <p><strong>From:</strong> <span id="email-from"></span></p>
+                    <p><strong>To:</strong> <span id="email-to"></span></p>
+                    <p><strong>Date:</strong> <span id="email-date"></span></p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Security Checks</h3>
+                    <p><strong>SPF:</strong> <span id="spf-result"></span></p>
+                    <p><strong>DKIM:</strong> <span id="dkim-result"></span></p>
+                    <p><strong>DMARC:</strong> <span id="dmarc-result"></span></p>
+                </div>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-2">Headers</h3>
+                <pre id="email-headers" class="bg-gray-100 p-4 rounded-lg overflow-x-auto"></pre>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-2">Attachments</h3>
+                <ul id="email-attachments"></ul>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-2">Security Score</h3>
+                <canvas id="security-score-chart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('email-analysis-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/api/analyze_mail', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('analysis-result').classList.remove('hidden');
+                document.getElementById('email-subject').textContent = data.subject;
+                document.getElementById('email-from').textContent = data.from;
+                document.getElementById('email-to').textContent = data.to;
+                document.getElementById('email-date').textContent = data.date;
+                document.getElementById('spf-result').textContent = data.spf_result;
+                document.getElementById('dkim-result').textContent = data.dkim_result;
+                document.getElementById('dmarc-result').textContent = data.dmarc_result;
+                document.getElementById('email-headers').textContent = JSON.stringify(data.all_headers, null, 2);
+
+                // Calculate security score
+                let securityScore = 0;
+                if (data.spf_result === "SPF check passed") securityScore += 33;
+                if (data.dkim_result === "DKIM signature present, verification required") securityScore += 33;
+                if (data.dmarc_result === "DMARC record found") securityScore += 34;
+
+                // Create security score chart
+                const ctx = document.getElementById('security-score-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Secure', 'Insecure'],
+                        datasets: [{
+                            data: [securityScore, 100 - securityScore],
+                            backgroundColor: ['#4CAF50', '#F44336']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        title: {
+                            display: true,
+                            text: 'Email Security Score'
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>

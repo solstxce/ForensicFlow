@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from flask_restx import Api, Resource, fields
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from flask_restx import Api, Resource, fields, Namespace
 from flask_pymongo import PyMongo
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -9,27 +9,64 @@ from email import policy
 from email.parser import BytesParser
 import dns.resolver
 import re
+from functools import wraps
 
 app = Flask(__name__)
+authorizations = {
+    'Bearer Auth': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'Authorization'
+    },
+}
+
 api = Api(app, version='1.0', title='ForensicFlow API',
-          description='A digital forensics API with email analysis capabilities')
+          description='A digital forensics API with email analysis capabilities',
+          authorizations=authorizations,
+          security='Bearer Auth')
 
 # Configure MongoDB
 app.config["MONGO_URI"] = "mongodb://localhost:27017/forensicflow"
+app.config["SECRET_KEY"] = "your-secret-key"  # Change this!
 mongo = PyMongo(app)
 
 # Configure Bcrypt for password hashing
 bcrypt = Bcrypt(app)
 
 # Configure JWT
-app.config["JWT_SECRET_KEY"] = "your-secret-key"  # Change this!
+app.config["JWT_SECRET_KEY"] = "your-jwt-secret-key"  # Change this!
 jwt = JWTManager(app)
 
-# User roles
-ROLES = ["Security Analyst", "Assistant Security Analyst", "Senior Security Analyst", "Security Analysis Supervisor", "Superuser"]
+# User roles and permissions
+ROLES = {
+    "Security Analyst": ["analyze_email"],
+    "Assistant Security Analyst": ["analyze_email"],
+    "Senior Security Analyst": ["analyze_email", "view_all_analyses"],
+    "Security Analysis Supervisor": ["analyze_email", "view_all_analyses", "manage_analysts"],
+    "Superuser": ["analyze_email", "view_all_analyses", "manage_analysts", "manage_users"]
+}
 
-# Namespace
-ns = api.namespace('api', description='ForensicFlow operations')
+# Decorator for role-based access control
+def role_required(required_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            current_user_id = get_jwt_identity()
+            current_user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
+            if current_user["role"] not in required_roles:
+                return {"error": "Unauthorized"}, 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# Namespaces
+auth_ns = Namespace('auth', description='Authentication operations')
+user_ns = Namespace('user', description='User operations')
+email_ns = Namespace('email', description='Email analysis operations')
+
+api.add_namespace(auth_ns)
+api.add_namespace(user_ns)
+api.add_namespace(email_ns)
 
 # Models
 user_model = api.model('User', {
@@ -65,9 +102,16 @@ def register_page():
 def dashboard():
     return render_template("dashboard.html")
 
-@ns.route('/register')
+@app.route("/ea-dashboard")
+@jwt_required()
+def ea_dashboard():
+    return render_template("ea-dashboard.html")
+
+# API routes
+@auth_ns.route('/register')
 class Register(Resource):
     @api.expect(user_model)
+    @api.doc(responses={201: 'User created successfully', 400: 'Username already exists'})
     def post(self):
         """Register a new user"""
         users = mongo.db.users
@@ -81,14 +125,16 @@ class Register(Resource):
         user_id = users.insert_one({
             "username": username,
             "password": hashed_password,
-            "role": "Security Analyst"  # Default role
+            "role": "Pending Approval",
+            "approved": False
         }).inserted_id
         
-        return {"message": "User created successfully"}, 201
+        return {"message": "User created successfully. Waiting for admin approval."}, 201
 
-@ns.route('/login')
+@auth_ns.route('/login')
 class Login(Resource):
     @api.expect(login_model)
+    @api.doc(responses={200: 'Login successful', 401: 'Invalid username or password', 403: 'Account not approved'})
     def post(self):
         """Login and receive an access token"""
         users = mongo.db.users
@@ -97,23 +143,65 @@ class Login(Resource):
         
         user = users.find_one({"username": username})
         if user and bcrypt.check_password_hash(user["password"], password):
+            if not user.get("approved", False):
+                return {"error": "Your account is pending approval."}, 403
             access_token = create_access_token(identity=str(user["_id"]))
             return {"access_token": access_token}, 200
         
         return {"error": "Invalid username or password"}, 401
 
-@ns.route('/user_role')
+@user_ns.route('/role')
 class UserRole(Resource):
     @jwt_required()
+    @api.doc(security='Bearer Auth')
     def get(self):
         """Get the role of the current user"""
         current_user_id = get_jwt_identity()
         user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
         return {"role": user["role"]}
 
-@ns.route('/analyze_mail')
+@user_ns.route('/change_role')
+class ChangeRole(Resource):
+    @jwt_required()
+    @api.expect(role_change_model)
+    @api.doc(security='Bearer Auth', responses={200: 'Role updated successfully', 403: 'Unauthorized', 404: 'User not found'})
+    @role_required(["Superuser"])
+    def post(self):
+        """Change the role of a user (Superuser only)"""
+        user_id = request.json["user_id"]
+        new_role = request.json["new_role"]
+        
+        if new_role not in ROLES:
+            return {"error": "Invalid role"}, 400
+        
+        result = mongo.db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"role": new_role, "approved": True}}
+        )
+        
+        if result.modified_count:
+            return {"message": "Role updated and user approved successfully"}, 200
+        else:
+            return {"error": "User not found"}, 404
+
+@user_ns.route('/users')
+class Users(Resource):
+    @jwt_required()
+    @api.doc(security='Bearer Auth', responses={200: 'Success', 403: 'Unauthorized'})
+    @role_required(["Superuser"])
+    def get(self):
+        """Get all users (Superuser only)"""
+        users = list(mongo.db.users.find({}, {"password": 0}))
+        for user in users:
+            user["_id"] = str(user["_id"])
+        
+        return users
+
+@email_ns.route('/analyze')
 class AnalyzeMail(Resource):
     @jwt_required()
+    @api.doc(security='Bearer Auth', responses={200: 'Analysis successful', 400: 'No file provided', 403: 'Unauthorized'})
+    @role_required(["Security Analyst", "Assistant Security Analyst", "Senior Security Analyst", "Security Analysis Supervisor", "Superuser"])
     @api.expect(api.parser().add_argument('file', location='files', type='file', required=True))
     def post(self):
         """Analyze an email file"""
@@ -128,51 +216,6 @@ class AnalyzeMail(Resource):
             eml_content = file.read()
             analysis_result = analyze_email(eml_content)
             return analysis_result, 200
-
-@ns.route('/change_role')
-class ChangeRole(Resource):
-    @jwt_required()
-    @api.expect(role_change_model)
-    def post(self):
-        """Change the role of a user (Superuser only)"""
-        current_user_id = get_jwt_identity()
-        current_user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
-        
-        if current_user["role"] != "Superuser":
-            return {"error": "Unauthorized"}, 403
-        
-        user_id = request.json["user_id"]
-        new_role = request.json["new_role"]
-        
-        if new_role not in ROLES:
-            return {"error": "Invalid role"}, 400
-        
-        result = mongo.db.users.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"role": new_role}}
-        )
-        
-        if result.modified_count:
-            return {"message": "Role updated successfully"}, 200
-        else:
-            return {"error": "User not found"}, 404
-
-@ns.route('/users')
-class Users(Resource):
-    @jwt_required()
-    def get(self):
-        """Get all users (Superuser only)"""
-        current_user_id = get_jwt_identity()
-        current_user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
-        
-        if current_user["role"] != "Superuser":
-            return {"error": "Unauthorized"}, 403
-        
-        users = list(mongo.db.users.find({}, {"password": 0}))
-        for user in users:
-            user["_id"] = str(user["_id"])
-        
-        return users
 
 def analyze_email(eml_content):
     msg = BytesParser(policy=policy.default).parsebytes(eml_content)
