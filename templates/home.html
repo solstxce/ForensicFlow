@@ -3,73 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForensicFlow: Automated Digital Evidence Analysis Platform</title>
+    <title>ForensicFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        primary: '#60A5FA',
-                        secondary: '#1F2937',
+                    animation: {
+                        'gradient-x': 'gradient-x 3s ease infinite',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        }
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="min-h-screen bg-black text-gray-300 flex flex-col">
-    <header class="bg-secondary py-4">
+<body class="bg-gray-900 text-white flex flex-col min-h-screen">
+    <header class="bg-gray-800 py-4">
         <div class="container mx-auto px-4">
-            <h1 class="text-3xl font-bold text-primary">ForensicFlow</h1>
+            <h1 class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
         </div>
     </header>
-    
+
     <main class="container mx-auto px-4 py-8 flex-grow">
         <section class="text-center mb-12">
             <h2 class="text-4xl font-bold mb-4 text-white">Automated Digital Evidence Analysis Platform</h2>
-            <p class="text-xl text-gray-400">Streamline your digital forensics investigations with cutting-edge automation and analysis tools.</p>
+            <p class="text-xl">Streamline your digital forensics investigations with cutting-edge automation and analysis tools.</p>
         </section>
-        
+
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-secondary p-6 rounded-lg shadow-md">
-                <i data-feather="shield" class="w-12 h-12 text-primary mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2 text-white">Secure Analysis</h3>
-                <p class="text-gray-400">State-of-the-art security measures to protect sensitive digital evidence.</p>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-2 text-blue-400">Secure Analysis</h3>
+                <p>State-of-the-art security measures to protect sensitive digital evidence.</p>
             </div>
-            <div class="bg-secondary p-6 rounded-lg shadow-md">
-                <i data-feather="search" class="w-12 h-12 text-primary mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2 text-white">Advanced Search</h3>
-                <p class="text-gray-400">Powerful search capabilities to quickly locate relevant information.</p>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-2 text-blue-400">Advanced Search</h3>
+                <p>Powerful search capabilities to quickly locate relevant information.</p>
             </div>
-            <div class="bg-secondary p-6 rounded-lg shadow-md">
-                <i data-feather="zap" class="w-12 h-12 text-primary mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2 text-white">Automated Processing</h3>
-                <p class="text-gray-400">Streamlined evidence processing for faster, more efficient investigations.</p>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-2 text-blue-400">Automated Processing</h3>
+                <p>Streamlined evidence processing for faster, more efficient investigations.</p>
             </div>
-            <div class="bg-secondary p-6 rounded-lg shadow-md">
-                <i data-feather="database" class="w-12 h-12 text-primary mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2 text-white">Comprehensive Reporting</h3>
-                <p class="text-gray-400">Generate detailed, customizable reports for thorough case documentation.</p>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-2 text-blue-400">Comprehensive Reporting</h3>
+                <p>Generate detailed, customizable reports for thorough case documentation.</p>
             </div>
         </section>
-        
+
         <section class="mt-12 text-center">
-            <button class="bg-primary text-black px-6 py-3 rounded-lg text-lg font-semibold hover:bg-blue-400 transition-colors">
-                <a href="/login">Get Started</a>
-            </button>
+            <a href="{{ url_for('login_page') }}" class="bg-blue-500 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline border border-blue-500 transition duration-300 ease-in-out hover:animate-gradient-x">
+                Get Started
+            </a>
         </section>
     </main>
-    
-    <footer class="bg-secondary text-gray-400 py-4 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2024 ForensicFlow. All rights reserved.</p>
+
+    <footer class="bg-gray-800 py-4">
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            © 2024 ForensicFlow. All rights reserved.
         </div>
     </footer>
-
-    <script>
-        feather.replace();
-    </script>
 </body>
 </html>

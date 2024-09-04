@@ -3,66 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - ForensicFlow</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Register for ForensicFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'gradient-x': 'gradient-x 3s ease infinite',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold mb-6 text-center">Register for ForensicFlow</h2>
-            <form id="register-form">
+<body class="bg-gray-900 text-white flex flex-col min-h-screen">
+    <div class="container mx-auto px-4 py-8 flex-grow flex items-center justify-center">
+        <div class="max-w-md w-full bg-gray-800 rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold mb-6 text-center text-blue-500">Register for ForensicFlow</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-900 text-red-300{% else %}bg-green-900 text-green-300{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register_page') }}">
                 <div class="mb-4">
-                    <label for="username" class="block text-gray-700 font-bold mb-2">Username</label>
-                    <input type="text" id="username" name="username" class="w-full px-3 py-2 border rounded-lg" required>
+                    <label for="username" class="block text-gray-300 text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="username" name="username" class="bg-gray-700 shadow appearance-none border rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div class="mb-4">
-                    <label for="password" class="block text-gray-700 font-bold mb-2">Password</label>
-                    <input type="password" id="password" name="password" class="w-full px-3 py-2 border rounded-lg" required>
+                    <label for="password" class="block text-gray-300 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="password" name="password" class="bg-gray-700 shadow appearance-none border rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
                 <div class="mb-6">
-                    <label for="confirm-password" class="block text-gray-700 font-bold mb-2">Confirm Password</label>
-                    <input type="password" id="confirm-password" name="confirm-password" class="w-full px-3 py-2 border rounded-lg" required>
+                    <label for="confirm_password" class="block text-gray-300 text-sm font-bold mb-2">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="bg-gray-700 shadow appearance-none border rounded w-full py-2 px-3 text-gray-300 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
-                <button type="submit" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Register</button>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-blue-500 hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline border border-blue-500 transition duration-300 ease-in-out hover:animate-gradient-x">
+                        Register
+                    </button>
+                    <a href="{{ url_for('login_page') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-400">
+                        Login here
+                    </a>
+                </div>
             </form>
-            <p class="mt-4 text-center">
-                Already have an account? <a href="/login" class="text-blue-500 hover:underline">Login here</a>
-            </p>
         </div>
     </div>
-    <script>
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (password !== confirmPassword) {
-                alert('Passwords do not match');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username, password }),
-                });
-                
-                if (response.ok) {
-                    alert('Registration successful. Please login.');
-                    window.location.href = '/login';
-                } else {
-                    const data = await response.json();
-                    alert(data.error || 'Registration failed. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
-        });
-    </script>
 </body>
 </html>

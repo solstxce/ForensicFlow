@@ -91,16 +91,51 @@ role_change_model = api.model('RoleChange', {
 })
 
 # Routes
+
 @app.route("/")
 def home():
     return render_template("home.html")
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 def login_page():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = mongo.db.users.find_one({"username": username})
+        if user and bcrypt.check_password_hash(user["password"], password):
+            if not user.get("approved", False):
+                flash("Your account is pending approval.", "warning")
+                return redirect(url_for('login_page'))
+            access_token = create_access_token(identity=str(user["_id"]))
+            # Here you might want to set the token in a secure cookie or send it to the frontend
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Invalid username or password", "error")
     return render_template("login.html")
 
-@app.route("/register")
+@app.route("/register", methods=['GET', 'POST'])
 def register_page():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash("Passwords do not match", "error")
+            return redirect(url_for('register_page'))
+        
+        if mongo.db.users.find_one({"username": username}):
+            flash("Username already exists", "error")
+        else:
+            hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+            mongo.db.users.insert_one({
+                "username": username,
+                "password": hashed_password,
+                "role": "Pending Approval",
+                "approved": False
+            })
+            flash("User created successfully. Waiting for admin approval.", "success")
+            return redirect(url_for('login_page'))
     return render_template("register.html")
 
 @app.route("/dashboard")
@@ -112,6 +147,8 @@ def dashboard():
 @jwt_required()
 def ea_dashboard():
     return render_template("ea-dashboard.html")
+
+
 
 # API routes
 @auth_ns.route('/register')
@@ -155,6 +192,9 @@ class Login(Resource):
             return {"access_token": access_token}, 200
         
         return {"error": "Invalid username or password"}, 401
+
+
+
 
 @user_ns.route('/role')
 class UserRole(Resource):
