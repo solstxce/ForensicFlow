@@ -90,6 +90,10 @@ role_change_model = api.model('RoleChange', {
     'new_role': fields.String(required=True, description='New role'),
 })
 
+action_password_model = api.model('ActionPassword', {
+    'password': fields.String(required=True, description='Action password'),
+})
+
 # Routes
 
 @app.route("/")
@@ -107,7 +111,6 @@ def login_page():
                 flash("Your account is pending approval.", "warning")
                 return redirect(url_for('login_page'))
             access_token = create_access_token(identity=str(user["_id"]))
-            # Here you might want to set the token in a secure cookie or send it to the frontend
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid username or password", "error")
@@ -141,14 +144,14 @@ def register_page():
 @app.route("/dashboard")
 @jwt_required()
 def dashboard():
-    return render_template("dashboard.html")
+    current_user_id = get_jwt_identity()
+    current_user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
+    return render_template("dashboard.html", user_role=current_user["role"])
 
 @app.route("/ea-dashboard")
 @jwt_required()
 def ea_dashboard():
     return render_template("ea-dashboard.html")
-
-
 
 # API routes
 @auth_ns.route('/register')
@@ -189,12 +192,9 @@ class Login(Resource):
             if not user.get("approved", False):
                 return {"error": "Your account is pending approval."}, 403
             access_token = create_access_token(identity=str(user["_id"]))
-            return {"access_token": access_token}, 200
+            return {"access_token": access_token, "role": user["role"]}, 200
         
         return {"error": "Invalid username or password"}, 401
-
-
-
 
 @user_ns.route('/role')
 class UserRole(Resource):
@@ -242,6 +242,42 @@ class Users(Resource):
             user["_id"] = str(user["_id"])
         
         return users
+
+@user_ns.route('/set_action_password')
+class SetActionPassword(Resource):
+    @jwt_required()
+    @api.expect(action_password_model)
+    @api.doc(security='Bearer Auth', responses={200: 'Action password set successfully', 403: 'Unauthorized'})
+    @role_required(["Superuser"])
+    def post(self):
+        """Set the action password (Superuser only)"""
+        current_user_id = get_jwt_identity()
+        action_password = request.json["password"]
+        
+        hashed_action_password = bcrypt.generate_password_hash(action_password).decode("utf-8")
+        mongo.db.users.update_one(
+            {"_id": ObjectId(current_user_id)},
+            {"$set": {"action_password": hashed_action_password}}
+        )
+        
+        return {"message": "Action password set successfully"}, 200
+
+@user_ns.route('/verify_action_password')
+class VerifyActionPassword(Resource):
+    @jwt_required()
+    @api.expect(action_password_model)
+    @api.doc(security='Bearer Auth', responses={200: 'Action password verified', 401: 'Invalid action password', 403: 'Unauthorized'})
+    @role_required(["Superuser"])
+    def post(self):
+        """Verify the action password (Superuser only)"""
+        current_user_id = get_jwt_identity()
+        action_password = request.json["password"]
+        
+        user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
+        if bcrypt.check_password_hash(user.get("action_password", ""), action_password):
+            return {"message": "Action password verified"}, 200
+        else:
+            return {"error": "Invalid action password"}, 401
 
 @email_ns.route('/analyze')
 class AnalyzeMail(Resource):

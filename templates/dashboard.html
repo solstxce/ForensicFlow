@@ -1,260 +1,172 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-gray-900 text-white">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - ForensicFlow</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>ForensicFlow Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-white text-2xl font-bold">ForensicFlow</a>
-            <div>
-                <span id="user-role" class="text-white mr-4"></span>
-                <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-            </div>
+<body class="min-h-screen flex flex-col">
+    <nav class="bg-gray-800 py-4">
+        <div class="container mx-auto px-4">
+            <h1 class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-6">Email Analysis Dashboard</h1>
+    <div class="container mx-auto px-4 py-8 flex-grow">
+        <h2 class="text-4xl font-bold mb-6 text-center text-white">Dashboard</h2>
 
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-xl font-bold mb-4">Upload Email for Analysis</h2>
-            <form id="email-analysis-form" enctype="multipart/form-data">
-                <div class="mb-4">
-                    <label for="email-file" class="block text-gray-700 font-bold mb-2">Upload .eml file</label>
-                    <input type="file" id="email-file" name="file" accept=".eml" class="w-full px-3 py-2 border rounded-lg" required>
-                </div>
-                <button type="submit" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Analyze Email</button>
-            </form>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-blue-400">User Information</h3>
+                <p>Welcome, <span id="username"></span>!</p>
+                <p>Role: <span id="userRole"></span></p>
+            </div>
 
-        <div id="analysis-result" class="bg-white rounded-lg shadow-md p-6 hidden">
-            <h2 class="text-xl font-bold mb-4">Analysis Result</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h3 class="text-lg font-semibold mb-2">Email Details</h3>
-                    <p><strong>Subject:</strong> <span id="email-subject"></span></p>
-                    <p><strong>From:</strong> <span id="email-from"></span></p>
-                    <p><strong>To:</strong> <span id="email-to"></span></p>
-                    <p><strong>Date:</strong> <span id="email-date"></span></p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-2">Security Checks</h3>
-                    <p><strong>SPF:</strong> <span id="spf-result"></span></p>
-                    <p><strong>DKIM:</strong> <span id="dkim-result"></span></p>
-                    <p><strong>DMARC:</strong> <span id="dmarc-result"></span></p>
-                </div>
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-blue-400">Quick Links</h3>
+                <ul class="list-disc list-inside">
+                    <li><a href="/ea-dashboard" class="text-blue-500 hover:text-blue-400">Email Analysis Dashboard</a></li>
+                    <li><a href="#" id="changePasswordLink" class="text-blue-500 hover:text-blue-400">Change Password</a></li>
+                </ul>
             </div>
-            <div class="mt-6">
-                <h3 class="text-lg font-semibold mb-2">Headers</h3>
-                <pre id="email-headers" class="bg-gray-100 p-4 rounded-lg overflow-x-auto"></pre>
-            </div>
-            <div class="mt-6">
-                <h3 class="text-lg font-semibold mb-2">Attachments</h3>
-                <ul id="attachment-list" class="list-disc list-inside"></ul>
-            </div>
-            <div class="mt-6">
-                <h3 class="text-lg font-semibold mb-2">Security Score</h3>
-                <canvas id="securityScoreChart" width="400" height="200"></canvas>
-            </div>
-        </div>
 
-        <div id="user-management" class="bg-white rounded-lg shadow-md p-6 mt-6 hidden">
-            <h2 class="text-xl font-bold mb-4">User Management</h2>
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th class="text-left">Username</th>
-                        <th class="text-left">Current Role</th>
-                        <th class="text-left">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="user-list"></tbody>
-            </table>
+            <div id="adminPanel" class="bg-gray-800 p-6 rounded-lg shadow-md hidden">
+                <h3 class="text-xl font-semibold mb-4 text-blue-400">Admin Panel</h3>
+                <button id="manageUsersBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Manage Users
+                </button>
+                <button id="setActionPasswordBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">
+                    Set Action Password
+                </button>
+            </div>
         </div>
     </div>
 
+    <div id="manageUsersModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl">
+            <h2 class="text-2xl font-bold mb-4 text-blue-500">Manage Users</h2>
+            <div id="userList" class="mb-4"></div>
+            <button id="closeManageUsersBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <div id="actionPasswordModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-4 text-blue-500">Set Action Password</h2>
+            <input type="password" id="actionPassword" placeholder="Enter action password" class="mb-4 p-2 rounded text-black">
+            <button id="submitActionPasswordBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Set Password
+            </button>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 py-4 mt-8">
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            © 2024 ForensicFlow. All rights reserved.
+        </div>
+    </footer>
+
     <script>
-        // Fetch user role and display it
-        async function getUserRole() {
-            try {
-                const response = await fetch('/api/user_role', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const data = await response.json();
-                document.getElementById('user-role').textContent = `Role: ${data.role}`;
-                
-                if (data.role === 'Superuser') {
-                    document.getElementById('user-management').classList.remove('hidden');
-                    loadUsers();
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        axios.get('/api/user/role')
+            .then(response => {
+                const role = response.data.role;
+                document.getElementById('userRole').textContent = role;
+                if (role === 'Superuser') {
+                    document.getElementById('adminPanel').classList.remove('hidden');
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error fetching user role:', error);
-            }
-        }
-
-        // Load users for superuser
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/users', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                const users = await response.json();
-                const userList = document.getElementById('user-list');
-                userList.innerHTML = '';
-                
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.username}</td>
-                        <td>${user.role}</td>
-                        <td>
-                            <select class="role-select" data-user-id="${user._id}">
-                                ${['Security Analyst', 'Assistant Security Analyst', 'Senior Security Analyst', 'Security Analysis Supervisor'].map(role => 
-                                    `<option value="${role}" ${user.role === role ? 'selected' : ''}>${role}</option>`
-                                ).join('')}
-                            </select>
-                            <button class="change-role-btn bg-blue-500 text-white px-2 py-1 rounded ml-2" data-user-id="${user._id}">Change Role</button>
-                        </td>
-                    `;
-                    userList.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error loading users:', error);
-            }
-        }
-
-        // Email analysis form submission
-        document.getElementById('email-analysis-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            
-            try {
-                const response = await fetch('/api/analyze_mail', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: formData
-                });
-                
-                const result = await response.json();
-                displayAnalysisResult(result);
-            } catch (error) {
-                console.error('Error analyzing email:', error);
-                alert('An error occurred while analyzing the email. Please try again.');
-            }
-        });
-
-        function displayAnalysisResult(result) {
-            document.getElementById('email-subject').textContent = result.subject;
-            document.getElementById('email-from').textContent = result.from;
-            document.getElementById('email-to').textContent = result.to;
-            document.getElementById('email-date').textContent = result.date;
-            document.getElementById('spf-result').textContent = result.spf_result;
-            document.getElementById('dkim-result').textContent = result.dkim_result;
-            document.getElementById('dmarc-result').textContent = result.dmarc_result;
-            document.getElementById('email-headers').textContent = JSON.stringify(result.all_headers, null, 2);
-
-            const attachmentList = document.getElementById('attachment-list');
-            attachmentList.innerHTML = '';
-            if (result.attachments && result.attachments.length > 0) {
-                result.attachments.forEach(attachment => {
-                    const li = document.createElement('li');
-                    li.textContent = `${attachment.filename} (${attachment.content_type})`;
-                    attachmentList.appendChild(li);
-                });
-            } else {
-                attachmentList.innerHTML = '<li>No attachments found</li>';
-            }
-
-            updateSecurityScoreChart(result);
-
-            document.getElementById('analysis-result').classList.remove('hidden');
-        }
-
-        function updateSecurityScoreChart(result) {
-            const ctx = document.getElementById('securityScoreChart').getContext('2d');
-            const spfScore = result.spf_result.includes('passed') ? 1 : 0;
-            const dkimScore = result.dkim_result.includes('present') ? 1 : 0;
-            const dmarcScore = result.dmarc_result.includes('found') ? 1 : 0;
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['SPF', 'DKIM', 'DMARC'],
-                    datasets: [{
-                        label: 'Security Score',
-                        data: [spfScore, dkimScore, dmarcScore],
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(153, 102, 255, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(153, 102, 255, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 1
-                        }
-                    }
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
                 }
             });
+
+        document.getElementById('manageUsersBtn').addEventListener('click', () => {
+            document.getElementById('manageUsersModal').classList.remove('hidden');
+            document.getElementById('manageUsersModal').classList.add('flex');
+            fetchUsers();
+        });
+
+        document.getElementById('closeManageUsersBtn').addEventListener('click', () => {
+            document.getElementById('manageUsersModal').classList.add('hidden');
+            document.getElementById('manageUsersModal').classList.remove('flex');
+        });
+
+        document.getElementById('setActionPasswordBtn').addEventListener('click', () => {
+            document.getElementById('actionPasswordModal').classList.remove('hidden');
+            document.getElementById('actionPasswordModal').classList.add('flex');
+        });
+
+        document.getElementById('submitActionPasswordBtn').addEventListener('click', () => {
+            const actionPassword = document.getElementById('actionPassword').value;
+            axios.post('/api/user/set_action_password', { password: actionPassword })
+                .then(response => {
+                    alert('Action password set successfully');
+                    document.getElementById('actionPasswordModal').classList.add('hidden');
+                    document.getElementById('actionPasswordModal').classList.remove('flex');
+                })
+                .catch(error => {
+                    console.error('Error setting action password:', error);
+                    alert('Failed to set action password');
+                });
+        });
+
+        function fetchUsers() {
+            axios.get('/api/user/users')
+                .then(response => {
+                    const users = response.data;
+                    const userList = document.getElementById('userList');
+                    userList.innerHTML = '';
+                    users.forEach(user => {
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'mb-2';
+                        userDiv.innerHTML = `
+                            <span>${user.username} - ${user.role}</span>
+                            <input type="checkbox" id="approve-${user._id}" ${user.approved ? 'checked' : ''}>
+                            <label for="approve-${user._id}">Approve</label>
+                            <select id="role-${user._id}">
+                                <option value="Security Analyst" ${user.role === 'Security Analyst' ? 'selected' : ''}>Security Analyst</option>
+                                <option value="Assistant Security Analyst" ${user.role === 'Assistant Security Analyst' ? 'selected' : ''}>Assistant Security Analyst</option>
+                                <option value="Senior Security Analyst" ${user.role === 'Senior Security Analyst' ? 'selected' : ''}>Senior Security Analyst</option>
+                                <option value="Security Analysis Supervisor" ${user.role === 'Security Analysis Supervisor' ? 'selected' : ''}>Security Analysis Supervisor</option>
+                                <option value="Superuser" ${user.role === 'Superuser' ? 'selected' : ''}>Superuser</option>
+                            </select>
+                            <button onclick="updateUser('${user._id}')">Update</button>
+                        `;
+                        userList.appendChild(userDiv);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching users:', error);
+                });
         }
 
-        // Change role functionality
-        document.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('change-role-btn')) {
-                const userId = e.target.getAttribute('data-user-id');
-                const newRole = e.target.previousElementSibling.value;
-                
-                try {
-                    const response = await fetch('/api/change_role', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({ user_id: userId, new_role: newRole })
-                    });
-                    
-                    if (response.ok) {
-                        alert('Role updated successfully');
-                        loadUsers();
-                    } else {
-                        alert('Failed to update role');
-                    }
-                } catch (error) {
-                    console.error('Error changing role:', error);
-                    alert('An error occurred while changing the role. Please try again.');
-                }
-            }
-        });
-
-        // Logout functionality
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        });
-
-        // Initial load
-        getUserRole();
+        function updateUser(userId) {
+            const approved = document.getElementById(`approve-${userId}`).checked;
+            const role = document.getElementById(`role-${userId}`).value;
+            axios.post('/api/user/change_role', { user_id: userId, new_role: role })
+                .then(response => {
+                    alert('User updated successfully');
+                    fetchUsers();
+                })
+                .catch(error => {
+                    console.error('Error updating user:', error);
+                    alert('Failed to update user');
+                });
+        }
     </script>
 </body>
 </html>

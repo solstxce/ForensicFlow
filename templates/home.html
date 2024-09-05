@@ -1,63 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-gray-900 text-white">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForensicFlow</title>
+    <title>ForensicFlow - Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'gradient-x': 'gradient-x 3s ease infinite',
-                    },
-                    keyframes: {
-                        'gradient-x': {
-                            '0%, 100%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'left center'
-                            },
-                            '50%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'right center'
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-gray-900 text-white flex flex-col min-h-screen">
-    <header class="bg-gray-800 py-4">
+<body class="min-h-screen flex flex-col">
+    <nav class="bg-gray-800 py-4">
         <div class="container mx-auto px-4">
             <h1 class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
         </div>
-    </header>
+    </nav>
 
-    <main class="container mx-auto px-4 py-8 flex-grow">
+    <div class="container mx-auto px-4 py-8 flex-grow" role="main">
         <section class="text-center mb-12">
             <h2 class="text-4xl font-bold mb-4 text-white">Automated Digital Evidence Analysis Platform</h2>
-            <p class="text-xl">Streamline your digital forensics investigations with cutting-edge automation and analysis tools.</p>
+            <p class="text-xl text-gray-300">Streamline your digital forensics investigations with cutting-edge automation and analysis tools.</p>
         </section>
 
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-gray-800 p-6 rounded-lg shadow-md">
                 <h3 class="text-xl font-semibold mb-2 text-blue-400">Secure Analysis</h3>
-                <p>State-of-the-art security measures to protect sensitive digital evidence.</p>
+                <p class="text-gray-300">State-of-the-art security measures to protect sensitive digital evidence.</p>
             </div>
             <div class="bg-gray-800 p-6 rounded-lg shadow-md">
                 <h3 class="text-xl font-semibold mb-2 text-blue-400">Advanced Search</h3>
-                <p>Powerful search capabilities to quickly locate relevant information.</p>
+                <p class="text-gray-300">Powerful search capabilities to quickly locate relevant information.</p>
             </div>
             <div class="bg-gray-800 p-6 rounded-lg shadow-md">
                 <h3 class="text-xl font-semibold mb-2 text-blue-400">Automated Processing</h3>
-                <p>Streamlined evidence processing for faster, more efficient investigations.</p>
+                <p class="text-gray-300">Streamlined evidence processing for faster, more efficient investigations.</p>
             </div>
             <div class="bg-gray-800 p-6 rounded-lg shadow-md">
                 <h3 class="text-xl font-semibold mb-2 text-blue-400">Comprehensive Reporting</h3>
-                <p>Generate detailed, customizable reports for thorough case documentation.</p>
+                <p class="text-gray-300">Generate detailed, customizable reports for thorough case documentation.</p>
             </div>
         </section>
 
@@ -66,9 +43,9 @@
                 Get Started
             </a>
         </section>
-    </main>
+    </div>
 
-    <footer class="bg-gray-800 py-4">
+    <footer class="bg-gray-800 py-4 mt-8">
         <div class="container mx-auto px-4 text-center text-gray-400">
             © 2024 ForensicFlow. All rights reserved.
         </div>
