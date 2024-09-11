@@ -1,172 +1,52 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-gray-900 text-white">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ForensicFlow Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
 </head>
-<body class="min-h-screen flex flex-col">
-    <nav class="bg-gray-800 py-4">
-        <div class="container mx-auto px-4">
-            <h1 class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
-        </div>
-    </nav>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+        <h1 id="forensicflow" class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
+        <button onclick="logout()" class="text-blue-500 hover:text-blue-400">Logout</button>
+    </div>
 
     <div class="container mx-auto px-4 py-8 flex-grow">
-        <h2 class="text-4xl font-bold mb-6 text-center text-white">Dashboard</h2>
+        <h2 id="dashboard" class="text-4xl font-bold mb-6 text-center text-white">Dashboard</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-gray-800 p-6 rounded-lg shadow-md">
-                <h3 class="text-xl font-semibold mb-4 text-blue-400">User Information</h3>
-                <p>Welcome, <span id="username"></span>!</p>
-                <p>Role: <span id="userRole"></span></p>
+                <h3 id="user-information" class="text-xl font-semibold mb-4 text-blue-400">User Information</h3>
+                <p>Welcome, <span id="username">{{ username }}</span>!</p>
+                <p>Role: <span id="userRole">{{ role }}</span></p>
             </div>
 
             <div class="bg-gray-800 p-6 rounded-lg shadow-md">
-                <h3 class="text-xl font-semibold mb-4 text-blue-400">Quick Links</h3>
-                <ul class="list-disc list-inside">
+                <h3 id="quick-links" class="text-xl font-semibold mb-4 text-blue-400">Quick Links</h3>
+                <ul>
                     <li><a href="/ea-dashboard" class="text-blue-500 hover:text-blue-400">Email Analysis Dashboard</a></li>
                     <li><a href="#" id="changePasswordLink" class="text-blue-500 hover:text-blue-400">Change Password</a></li>
                 </ul>
             </div>
 
-            <div id="adminPanel" class="bg-gray-800 p-6 rounded-lg shadow-md hidden">
+            {% if role == "Superuser" %}
+            <div id="adminPanel" class="bg-gray-800 p-6 rounded-lg shadow-md">
                 <h3 class="text-xl font-semibold mb-4 text-blue-400">Admin Panel</h3>
-                <button id="manageUsersBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Manage Users
-                </button>
-                <button id="setActionPasswordBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">
-                    Set Action Password
-                </button>
+                <ul>
+                    <li><a href="#" class="text-blue-500 hover:text-blue-400">Manage Users</a></li>
+                    <li><a href="#" class="text-blue-500 hover:text-blue-400">Set Action Password</a></li>
+                </ul>
             </div>
+            {% endif %}
         </div>
     </div>
 
-    <div id="manageUsersModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl">
-            <h2 class="text-2xl font-bold mb-4 text-blue-500">Manage Users</h2>
-            <div id="userList" class="mb-4"></div>
-            <button id="closeManageUsersBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Close
-            </button>
-        </div>
+    <div class="container mx-auto px-4 text-center text-gray-400">
+        © 2024 ForensicFlow. All rights reserved.
     </div>
 
-    <div id="actionPasswordModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold mb-4 text-blue-500">Set Action Password</h2>
-            <input type="password" id="actionPassword" placeholder="Enter action password" class="mb-4 p-2 rounded text-black">
-            <button id="submitActionPasswordBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Set Password
-            </button>
-        </div>
-    </div>
-
-    <footer class="bg-gray-800 py-4 mt-8">
-        <div class="container mx-auto px-4 text-center text-gray-400">
-            © 2024 ForensicFlow. All rights reserved.
-        </div>
-    </footer>
-
-    <script>
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login';
-        }
-
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        axios.get('/api/user/role')
-            .then(response => {
-                const role = response.data.role;
-                document.getElementById('userRole').textContent = role;
-                if (role === 'Superuser') {
-                    document.getElementById('adminPanel').classList.remove('hidden');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching user role:', error);
-                if (error.response && error.response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = '/login';
-                }
-            });
-
-        document.getElementById('manageUsersBtn').addEventListener('click', () => {
-            document.getElementById('manageUsersModal').classList.remove('hidden');
-            document.getElementById('manageUsersModal').classList.add('flex');
-            fetchUsers();
-        });
-
-        document.getElementById('closeManageUsersBtn').addEventListener('click', () => {
-            document.getElementById('manageUsersModal').classList.add('hidden');
-            document.getElementById('manageUsersModal').classList.remove('flex');
-        });
-
-        document.getElementById('setActionPasswordBtn').addEventListener('click', () => {
-            document.getElementById('actionPasswordModal').classList.remove('hidden');
-            document.getElementById('actionPasswordModal').classList.add('flex');
-        });
-
-        document.getElementById('submitActionPasswordBtn').addEventListener('click', () => {
-            const actionPassword = document.getElementById('actionPassword').value;
-            axios.post('/api/user/set_action_password', { password: actionPassword })
-                .then(response => {
-                    alert('Action password set successfully');
-                    document.getElementById('actionPasswordModal').classList.add('hidden');
-                    document.getElementById('actionPasswordModal').classList.remove('flex');
-                })
-                .catch(error => {
-                    console.error('Error setting action password:', error);
-                    alert('Failed to set action password');
-                });
-        });
-
-        function fetchUsers() {
-            axios.get('/api/user/users')
-                .then(response => {
-                    const users = response.data;
-                    const userList = document.getElementById('userList');
-                    userList.innerHTML = '';
-                    users.forEach(user => {
-                        const userDiv = document.createElement('div');
-                        userDiv.className = 'mb-2';
-                        userDiv.innerHTML = `
-                            <span>${user.username} - ${user.role}</span>
-                            <input type="checkbox" id="approve-${user._id}" ${user.approved ? 'checked' : ''}>
-                            <label for="approve-${user._id}">Approve</label>
-                            <select id="role-${user._id}">
-                                <option value="Security Analyst" ${user.role === 'Security Analyst' ? 'selected' : ''}>Security Analyst</option>
-                                <option value="Assistant Security Analyst" ${user.role === 'Assistant Security Analyst' ? 'selected' : ''}>Assistant Security Analyst</option>
-                                <option value="Senior Security Analyst" ${user.role === 'Senior Security Analyst' ? 'selected' : ''}>Senior Security Analyst</option>
-                                <option value="Security Analysis Supervisor" ${user.role === 'Security Analysis Supervisor' ? 'selected' : ''}>Security Analysis Supervisor</option>
-                                <option value="Superuser" ${user.role === 'Superuser' ? 'selected' : ''}>Superuser</option>
-                            </select>
-                            <button onclick="updateUser('${user._id}')">Update</button>
-                        `;
-                        userList.appendChild(userDiv);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching users:', error);
-                });
-        }
-
-        function updateUser(userId) {
-            const approved = document.getElementById(`approve-${userId}`).checked;
-            const role = document.getElementById(`role-${userId}`).value;
-            axios.post('/api/user/change_role', { user_id: userId, new_role: role })
-                .then(response => {
-                    alert('User updated successfully');
-                    fetchUsers();
-                })
-                .catch(error => {
-                    console.error('Error updating user:', error);
-                    alert('Failed to update user');
-                });
-        }
-    </script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/dashboard.js"></script>
 </body>
 </html>
