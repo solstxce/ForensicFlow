@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForensicFlow Superuser Approval</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020617;
+        }
+        
+        .main-gradient {
+            background: linear-gradient(135deg, 
+                #020617 0%,
+                #0f172a 25%,
+                #1e1b4b 50%,
+                #0f172a 75%,
+                #020617 100%
+            );
+            min-height: 100vh;
+            background-attachment: fixed;
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-effect {
+            background: rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0),
+                linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+            background-size: 40px 40px, 100px 100px, 100px 100px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(45deg, #60A5FA, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-card {
+            transition: all 0.3s ease;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-[#020617]">
+    <div class="main-gradient">
+        <div class="hero-pattern min-h-screen">
+            <!-- Navigation -->
+            <nav class="glass-effect sticky top-0 z-50 px-6 py-4 border-b border-white/[0.05]">
+                <div class="container mx-auto flex justify-between items-center">
+                    <a href="/dashboard" class="flex items-center space-x-3">
+                        <i class="fas fa-shield-alt text-blue-500 text-2xl"></i>
+                        <h1 class="text-3xl font-bold gradient-text">ForensicFlow</h1>
+                    </a>
+                    <div class="flex items-center space-x-6">
+                        <a href="/dashboard" class="text-gray-300 hover:text-white transition-colors flex items-center space-x-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Back to Dashboard</span>
+                        </a>
+                        <button onclick="logout()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="container mx-auto px-6 py-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold gradient-text mb-2">User Management</h2>
+                    <p class="text-gray-400">Review and approve pending user registrations</p>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="glass-effect p-6 rounded-2xl mb-8">
+                    <div id="userStats" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <h4 class="text-gray-400 mb-2">Pending Approvals</h4>
+                            <p class="text-2xl font-bold text-blue-400" id="pendingCount">-</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="text-gray-400 mb-2">Total Users</h4>
+                            <p class="text-2xl font-bold text-green-400">24</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="text-gray-400 mb-2">Last Approval</h4>
+                            <p class="text-2xl font-bold text-purple-400">2h ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User List -->
+                <div class="glass-effect p-6 rounded-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold text-blue-400">
+                            <i class="fas fa-user-clock mr-2"></i>Pending Approvals
+                        </h3>
+                        <button onclick="fetchPendingUsers()" 
+                                class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+                    <div id="userList" class="space-y-4">
+                        <!-- User list will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="container mx-auto px-6 py-8 mt-8">
+                <div class="text-center text-gray-400">
+                    <p>© 2024 ForensicFlow. All rights reserved.</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchPendingUsers();
+        });
+
+        function fetchPendingUsers() {
+            fetch('/api/user/pending_users')
+                .then(response => response.json())
+                .then(users => {
+                    const userList = document.getElementById('userList');
+                    const pendingCount = document.getElementById('pendingCount');
+                    pendingCount.textContent = users.length;
+                    
+                    userList.innerHTML = '';
+                    if (users.length === 0) {
+                        userList.innerHTML = `
+                            <div class="text-center text-gray-400 py-8">
+                                <i class="fas fa-check-circle text-4xl mb-4"></i>
+                                <p>No pending approvals</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    users.forEach(user => {
+                        userList.innerHTML += `
+                            <div class="glass-effect p-6 rounded-xl user-card">
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="p-3 bg-blue-500 bg-opacity-20 rounded-lg">
+                                            <i class="fas fa-user text-blue-400"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-semibold text-white">${user.username}</h4>
+                                            <p class="text-gray-400">Current Role: ${user.role}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-4 w-full md:w-auto">
+                                        <select id="role-${user._id}" 
+                                                class="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 transition-all">
+                                            <option value="Security Analyst">Security Analyst</option>
+                                            <option value="Assistant Security Analyst">Assistant Security Analyst</option>
+                                            <option value="Senior Security Analyst">Senior Security Analyst</option>
+                                            <option value="Security Analysis Supervisor">Security Analysis Supervisor</option>
+                                        </select>
+                                        <button onclick="approveUser('${user._id}')" 
+                                                class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg transition-colors flex items-center space-x-2">
+                                            <i class="fas fa-check"></i>
+                                            <span>Approve</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error fetching pending users:', error));
+        }
+
+        function approveUser(userId) {
+            const newRole = document.getElementById(`role-${userId}`).value;
+            fetch('/api/user/approve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    new_role: newRole
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchPendingUsers();
+            })
+            .catch(error => console.error('Error approving user:', error));
+        }
+
+        function logout() {
+            fetch('/api/auth/logout', { method: 'POST' })
+                .then(() => {
+                    window.location.href = '/login';
+                })
+                .catch(error => console.error('Error logging out:', error));
+        }
+    </script>
+</body>
+</html>

@@ -6,39 +6,194 @@
     <title>Login - ForensicFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="/static/js/auth.js"></script>
+    <style>
+        body {
+            background-color: #020617; /* Ensure base background is dark */
+        }
+        
+        .main-gradient {
+            background: linear-gradient(135deg, 
+                #020617 0%,    /* Darkest blue */
+                #0f172a 25%,   /* Very dark blue */
+                #1e1b4b 50%,   /* Dark indigo */
+                #0f172a 75%,   /* Very dark blue */
+                #020617 100%   /* Darkest blue */
+            );
+            min-height: 100vh;
+            background-attachment: fixed;
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .page-wrapper {
+            background-color: rgba(2, 6, 23, 0.95); /* Dark overlay */
+            min-height: 100vh;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-effect {
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0),
+                linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+            background-size: 40px 40px, 100px 100px, 100px 100px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(45deg, #60A5FA, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-field {
+            background: rgba(2, 6, 23, 0.9);  /* Darker input background */
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            background: rgba(2, 6, 23, 0.95);
+            border-color: #60A5FA;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+
+        .login-button {
+            background: linear-gradient(45deg, #2563eb, #3b82f6);
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            background: linear-gradient(45deg, #1d4ed8, #2563eb);
+            transform: translateY(-1px);
+        }
+
+        .social-btn {
+            background: rgba(2, 6, 23, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(15, 23, 42, 0.9);
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white">
-    <div class="container mx-auto px-4">
-        <h1 id="forensicflow" class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
-    </div>
+<body class="bg-[#020617]">
+    <div class="main-gradient">
+        <div class="page-wrapper hero-pattern">
+            <!-- Background Decorations -->
+            <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+                <div class="absolute -top-1/2 -right-1/2 w-full h-full bg-blue-500 opacity-[0.02] rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-1/2 -left-1/2 w-full h-full bg-indigo-500 opacity-[0.02] rounded-full blur-3xl"></div>
+            </div>
 
-    <div class="container mx-auto px-4 py-8 flex-grow flex items-center justify-center">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6 text-center text-blue-500">Login to ForensicFlow</h2>
-
-            <div id="messages" class="mb-4"></div>
-
-            <form id="loginForm">
-                <div class="mb-4">
-                    <label for="username" class="block mb-2">Username</label>
-                    <input type="text" id="username" required class="w-full p-2 rounded bg-gray-700">
+            <!-- Navigation -->
+            <nav class="fixed w-full z-50 glass-effect border-b border-white/[0.05]">
+                <div class="container mx-auto px-6 py-4">
+                    <a href="/" class="flex items-center space-x-3 w-fit">
+                        <i class="fas fa-shield-alt text-blue-500 text-2xl"></i>
+                        <h1 class="text-3xl font-bold gradient-text">ForensicFlow</h1>
+                    </a>
                 </div>
-                <div class="mb-6">
-                    <label for="password" class="block mb-2">Password</label>
-                    <input type="password" id="password" required class="w-full p-2 rounded bg-gray-700">
-                </div>
-                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-400">Login</button>
-            </form>
+            </nav>
 
-            <p class="mt-4 text-center">
-                Don't have an account? <a href="/register" class="text-blue-500 hover:text-blue-400">Register here</a>
-            </p>
+            <!-- Main Content -->
+            <div class="relative min-h-screen flex flex-col items-center justify-center px-4">
+                <div class="glass-effect p-8 rounded-2xl w-full max-w-md relative overflow-hidden shadow-xl border border-white/[0.05]">
+                    <!-- Card Decorations -->
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-500 rounded-full opacity-[0.05]"></div>
+                    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500 rounded-full opacity-[0.05]"></div>
+
+                    <!-- Login Form -->
+                    <div class="relative">
+                        <div class="text-center mb-8">
+                            <h2 class="text-3xl font-bold mb-2 gradient-text">Welcome Back</h2>
+                            <p class="text-gray-400">Sign in to your account</p>
+                        </div>
+
+                        <div id="messages" class="mb-4"></div>
+
+                        <form id="loginForm" class="space-y-6">
+                            <div class="space-y-4">
+                                <div class="relative">
+                                    <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    <input type="text" id="username" required 
+                                        class="input-field w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none text-white"
+                                        placeholder="Username">
+                                </div>
+
+                                <div class="relative">
+                                    <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                    <input type="password" id="password" required 
+                                        class="input-field w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none text-white"
+                                        placeholder="Password">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-sm">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" class="rounded bg-gray-800 border-gray-700 text-blue-500">
+                                    <span class="text-gray-400">Remember me</span>
+                                </label>
+                                <a href="#" class="text-blue-400 hover:text-blue-300">Forgot password?</a>
+                            </div>
+
+                            <button type="submit" class="login-button w-full py-3 rounded-lg text-white font-semibold shadow-lg">
+                                Sign In
+                            </button>
+
+                            <div class="relative">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-gray-700"></div>
+                                </div>
+                                <div class="relative flex justify-center text-sm">
+                                    <span class="px-2 bg-[#0f172a] text-gray-400">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-4">
+                                <button class="social-btn p-3 rounded-lg bg-opacity-20 bg-gray-800 border border-gray-700">
+                                    <i class="fab fa-google text-gray-400"></i>
+                                </button>
+                                <button class="social-btn p-3 rounded-lg bg-opacity-20 bg-gray-800 border border-gray-700">
+                                    <i class="fab fa-github text-gray-400"></i>
+                                </button>
+                                <button class="social-btn p-3 rounded-lg bg-opacity-20 bg-gray-800 border border-gray-700">
+                                    <i class="fab fa-linkedin text-gray-400"></i>
+                                </button>
+                            </div>
+
+                            <p class="text-center text-gray-400">
+                                Don't have an account? 
+                                <a href="/register" class="text-blue-400 hover:text-blue-300 font-medium">Register here</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="w-full py-6">
+                <div class="container mx-auto px-4">
+                    <div class="text-center text-gray-400">
+                        © 2024 ForensicFlow. All rights reserved.
+                    </div>
+                </div>
+            </footer>
         </div>
-    </div>
-
-    <div class="container mx-auto px-4 text-center text-gray-400">
-        © 2024 ForensicFlow. All rights reserved.
     </div>
 
     <script>

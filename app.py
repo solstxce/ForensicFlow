@@ -138,6 +138,11 @@ def dashboard():
 def ea_dashboard():
     return render_template("ea-dashboard.html")
 
+@app.route('/forensic-fusion')
+@jwt_cookie_required()
+def forensic_fusion():
+    return render_template('forensic_fusion.html')
+
 # API routes
 @auth_ns.route('/register')
 class Register(Resource):
@@ -361,6 +366,16 @@ def analyze_email(eml_content):
         "all_headers": headers
     }
 
+@app.route("/superuser/approve")
+@jwt_cookie_required()
+@role_required(["Superuser"])
+def superuser_approve():
+    current_user_id = get_jwt_identity()
+    current_user = mongo.db.users.find_one({"_id": ObjectId(current_user_id)})
+    if current_user and current_user["role"] == "Superuser":
+        return render_template("superuser_approval.html", username=current_user["username"])
+    return render_template("error.html", error="Unauthorized access"), 403
+
 def check_spf(spf_header):
     if not spf_header:
         return "No SPF record found"
@@ -369,6 +384,12 @@ def check_spf(spf_header):
         return "SPF check passed"
     else:
         return "SPF check failed"
+
+@app.route("/hash-analyzer")
+@jwt_cookie_required()
+@role_required(["Superuser", "Security Analyst"])
+def hash_analyzer():
+    return render_template("hash_analyzer.html")
 
 def check_dkim(dkim_header):
     if not dkim_header:
@@ -384,6 +405,46 @@ def check_dmarc(from_header):
         return "DMARC record found"
     except:
         return "No DMARC record found"
+    
+@user_ns.route('/pending_users')
+class PendingUsers(Resource):
+    @jwt_cookie_required()
+    @api.doc(security='Cookie Auth', responses={200: 'Success', 403: 'Unauthorized'})
+    @role_required(["Superuser"])
+    def get(self):
+        """Get all pending users (Superuser only)"""
+        pending_users = list(mongo.db.users.find({"approved": False}, {"password": 0}))
+        for user in pending_users:
+            user["_id"] = str(user["_id"])
+        
+        return pending_users
+
+@user_ns.route('/approve')
+class ApproveUser(Resource):
+    @jwt_cookie_required()
+    @api.expect(api.model('ApproveUser', {
+        'user_id': fields.String(required=True),
+        'new_role': fields.String(required=True)
+    }))
+    @api.doc(security='Cookie Auth', responses={200: 'User approved successfully', 403: 'Unauthorized', 404: 'User not found'})
+    @role_required(["Superuser"])
+    def post(self):
+        """Approve a user and set their role (Superuser only)"""
+        user_id = request.json["user_id"]
+        new_role = request.json["new_role"]
+        
+        if new_role not in ROLES:
+            return {"error": "Invalid role"}, 400
+        
+        result = mongo.db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"role": new_role, "approved": True}}
+        )
+        
+        if result.modified_count:
+            return {"message": "User approved and role updated successfully"}, 200
+        else:
+            return {"error": "User not found"}, 404
 
 if __name__ == "__main__":
     app.run(debug=True)

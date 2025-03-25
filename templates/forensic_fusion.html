@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForensicFusion - Crime Scene Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020617;
+        }
+        
+        .main-gradient {
+            background: linear-gradient(135deg, 
+                #020617 0%,
+                #0f172a 25%,
+                #1e1b4b 50%,
+                #0f172a 75%,
+                #020617 100%
+            );
+            min-height: 100vh;
+            background-attachment: fixed;
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .glass-effect {
+            background: rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(45deg, #60A5FA, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-gradient">
+        <div class="min-h-screen">
+            <!-- Navigation -->
+            <nav class="glass-effect sticky top-0 z-50 px-6 py-4 border-b border-white/[0.05]">
+                <div class="container mx-auto flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-microscope text-blue-500 text-2xl"></i>
+                        <h1 class="text-3xl font-bold gradient-text">ForensicFusion</h1>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <a href="/dashboard" class="text-gray-300 hover:text-white transition-colors flex items-center space-x-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Back to Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="container mx-auto px-6 py-8">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold gradient-text mb-2">Crime Scene Analysis</h2>
+                        <p class="text-gray-400">Upload images for AI-powered forensic analysis</p>
+                    </div>
+                    
+                    <!-- Upload Form -->
+                    <form id="analysisForm" class="glass-effect p-8 rounded-2xl space-y-6">
+                        <div class="space-y-6">
+                            <!-- Image Upload -->
+                            <div class="upload-zone rounded-xl p-8 cursor-pointer transition-all duration-200 hover:bg-gray-800/10">
+                                <div class="text-center">
+                                    <div class="mb-4">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500"></i>
+                                    </div>
+                                    <div class="mb-4">
+                                        <h3 class="text-xl font-semibold text-white">Upload Crime Scene Images</h3>
+                                        <p class="text-gray-400 text-sm mt-1">Drag and drop or click to select files</p>
+                                    </div>
+                                    <div>
+                                        <input type="file" id="imageInput" accept="image/*" class="hidden" multiple>
+                                        <label for="imageInput" 
+                                            class="cursor-pointer bg-blue-600 px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2">
+                                            <i class="fas fa-image"></i>
+                                            <span>Select Images</span>
+                                        </label>
+                                    </div>
+                                    <div id="imagePreview" class="mt-6 grid grid-cols-2 gap-4"></div>
+                                </div>
+                            </div>
+
+                            <!-- Case Notes -->
+                            <div>
+                                <label for="caseNotes" class="block text-sm font-medium text-gray-300 mb-2">
+                                    <i class="fas fa-clipboard-list mr-2"></i>Case Notes
+                                </label>
+                                <textarea id="caseNotes" rows="4" 
+                                    class="w-full px-4 py-3 bg-gray-800/50 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring focus:ring-blue-500/20 text-white placeholder-gray-500"
+                                    placeholder="Enter any relevant case notes or context..."></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" 
+                                class="w-full bg-blue-600 py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 text-white font-semibold">
+                                <i class="fas fa-search"></i>
+                                <span>Analyze Scene</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Results Section -->
+                    <div id="results" class="mt-8 hidden">
+                        <div class="glass-effect rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold mb-6 gradient-text">Analysis Results</h3>
+                            <div id="detectedObjects" class="mb-8">
+                                <div id="objectList" class="space-y-4"></div>
+                            </div>
+                            <div id="processedImage">
+                                <h4 class="text-lg font-semibold mb-4 text-gray-300">
+                                    <i class="fas fa-image mr-2"></i>Processed Image
+                                </h4>
+                                <div id="imageOutput" class="glass-effect rounded-xl overflow-hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep your existing script section unchanged -->
+    <script>
+        let isRobberyScene = true; // Toggle flag
+        let imageMetadata = {
+            timestamp: null,
+            lightCondition: null
+        };
+
+        // Add keyboard event listener
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === '.') {
+                isRobberyScene = !isRobberyScene;
+                const resultsDiv = document.getElementById('results');
+                if (!resultsDiv.classList.contains('hidden')) {
+                    showResults(); // Re-render results with toggled scene
+                }
+            }
+        });
+
+        // Separate the results rendering into a function
+        function showResults() {
+            const timestamp = new Date(imageMetadata.timestamp);
+            const formattedDate = timestamp.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const formattedTime = timestamp.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const objectList = document.getElementById('objectList');
+            
+            if (isRobberyScene) {
+                objectList.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="p-4 bg-blue-900/40 rounded-lg border border-blue-800">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                                Image Metadata
+                            </h4>
+                            <p class="text-sm"><i class="far fa-clock mr-2"></i>Timestamp: ${formattedDate} at ${formattedTime}</p>
+                            <p class="text-sm"><i class="far fa-sun mr-2"></i>Lighting Conditions: Daylight</p>
+                        </div>
+
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-users text-red-400 mr-2"></i>Suspects (3 individuals)</span>
+                            <span class="text-green-400">Confidence: 99%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-door-open text-red-400 mr-2"></i>Forced Entry (Broken Lock)</span>
+                            <span class="text-green-400">Confidence: 85%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-hammer text-yellow-400 mr-2"></i>Weapon (Crowbar)</span>
+                            <span class="text-red-400">Confidence: 57%(Low)</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-video text-gray-400 mr-2"></i>Security Camera (Damaged)</span>
+                            <span class="text-yellow-400">Confidence: 74%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-shoe-prints text-blue-400 mr-2"></i>Footprint Pattern (Multiple)</span>
+                            <span class="text-red-400">Confidence: 49%(Too Low)</span>
+                        </div>
+
+                        <div class="mt-6 p-6 bg-gray-800 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-3 flex items-center text-blue-400">
+                                <i class="fas fa-chart-bar mr-2"></i>Scene Analysis Summary
+                            </h4>
+                            <div class="text-sm text-gray-300 leading-relaxed space-y-4">
+                                <p class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-yellow-400 mr-2 mt-1"></i>
+                                    Analysis indicates a bold daylight robbery involving three suspects.
+                                </p>
+                                <div class="ml-6 space-y-2">
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Incident captured on ${formattedDate} at ${formattedTime}</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Three male suspects identified</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Point of entry shows forced entry signs</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Security system deliberately disabled</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 p-4 bg-yellow-900/30 rounded-lg border border-yellow-800">
+                                <h5 class="font-semibold flex items-center text-yellow-400 mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>High Priority Actions
+                                </h5>
+                                <ul class="ml-6 space-y-1 text-sm">
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>Detailed footprint analysis</li>
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>Review nearby CCTV footage</li>
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>DNA collection from equipment</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                objectList.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="p-4 bg-blue-900/40 rounded-lg border border-blue-800">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                                Image Metadata
+                            </h4>
+                            <p class="text-sm"><i class="far fa-clock mr-2"></i>Timestamp: ${formattedDate} at ${formattedTime}</p>
+                            <p class="text-sm"><i class="far fa-sun mr-2"></i>Lighting Conditions: Daylight (Indoor Shop)</p>
+                        </div>
+
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-users text-red-400 mr-2"></i>Individuals (2 persons)</span>
+                            <span class="text-green-400">Confidence: 98.2%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-fist text-red-400 mr-2"></i>Physical Altercation</span>
+                            <span class="text-green-400">Confidence: 92.7%</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-gun text-yellow-400 mr-2"></i>Weapons Present</span>
+                            <span class="text-green-400">Confidence: 79.4% (None Detected)</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-door-closed text-red-400 mr-2"></i>Forced Entry</span>
+                            <span class="text-red-400">Confidence: 50% (Unlikely)</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
+                            <span class="flex items-center"><i class="fas fa-store text-yellow-400 mr-2"></i>Store Property Damage</span>
+                            <span class="text-yellow-400">Confidence: 68.3%</span>
+                        </div>
+
+                        <div class="mt-6 p-6 bg-gray-800 rounded-lg">
+                            <h4 class="text-lg font-semibold mb-3 flex items-center text-blue-400">
+                                <i class="fas fa-chart-bar mr-2"></i>Scene Analysis Summary
+                            </h4>
+                            <div class="text-sm text-gray-300 leading-relaxed space-y-4">
+                                <p class="flex items-start">
+                                    <i class="fas fa-exclamation-circle text-yellow-400 mr-2 mt-1"></i>
+                                    Analysis indicates a physical altercation between two individuals inside a retail establishment.
+                                </p>
+                                <div class="ml-6 space-y-2">
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Incident captured on ${formattedDate} at ${formattedTime}</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Two individuals involved in physical confrontation</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>No weapons detected in the scene</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Moderate likelihood of collateral damage to store property</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>No signs of forced entry - likely occurred during business hours</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Multiple store fixtures and displays visible in frame</p>
+                                    <p class="flex items-center"><i class="fas fa-circle text-xs text-gray-500 mr-2"></i>Indoor surveillance system likely captured additional angles</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 p-4 bg-yellow-900/30 rounded-lg border border-yellow-800">
+                                <h5 class="font-semibold flex items-center text-yellow-400 mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Recommended Actions
+                                </h5>
+                                <ul class="ml-6 space-y-1 text-sm">
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>Review store CCTV footage for complete incident timeline</li>
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>Document any property damage for insurance purposes</li>
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>Interview store staff and witnesses</li>
+                                    <li class="flex items-center"><i class="fas fa-angle-right text-yellow-500 mr-2"></i>Check for any prior incidents between involved parties</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // Update the form submit handler
+        document.getElementById('analysisForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Analyzing...';
+
+            setTimeout(() => {
+                document.getElementById('results').classList.remove('hidden');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Analyze Scene';
+                
+                showResults(); // Call the results rendering function
+
+                // Add a processed image placeholder
+                const imageOutput = document.getElementById('imageOutput');
+                imageOutput.innerHTML = `
+                    <div class="p-4 text-center text-gray-400">
+                        <p>Processed image with detected objects highlighted</p>
+                        <p class="text-sm mt-2">(Image processing visualization would appear here)</p>
+                    </div>
+                `;
+            }, 2000);
+        });
+    </script>
+
+    <!-- Add this script section after your existing script -->
+    <script>
+        // File Input Handling
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadZone = document.querySelector('.upload-zone');
+
+        // Drag and drop functionality
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('border-blue-500');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('border-blue-500');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('border-blue-500');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // File input change handler
+        imageInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            handleFiles(files);
+        });
+
+        // Handle selected files
+        function handleFiles(files) {
+            imagePreview.innerHTML = ''; // Clear existing previews
+            
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload only image files.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                const previewContainer = document.createElement('div');
+                previewContainer.className = 'relative';
+
+                reader.onload = (e) => {
+                    previewContainer.innerHTML = `
+                        <div class="relative group">
+                            <img src="${e.target.result}" 
+                                 alt="Preview" 
+                                 class="w-full h-48 object-cover rounded-lg">
+                            <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 
+                                        transition-opacity duration-200 rounded-lg flex items-center justify-center">
+                                <button type="button" 
+                                        class="text-white bg-red-500 hover:bg-red-600 p-2 rounded-full"
+                                        onclick="this.closest('.relative').remove()">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-1 truncate">${file.name}</p>
+                    `;
+                };
+
+                reader.readAsDataURL(file);
+                imagePreview.appendChild(previewContainer);
+            });
+
+            // Show preview section if files are selected
+            if (files.length > 0) {
+                imagePreview.classList.remove('hidden');
+            }
+        }
+
+        // Add click handler for the entire upload zone
+        uploadZone.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        // Prevent form submission when clicking inside upload zone
+        uploadZone.querySelector('label').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html> 
