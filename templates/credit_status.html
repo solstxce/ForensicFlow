@@ -1,0 +1,307 @@
+<div id="creditStatus" class="glass-effect mb-6 p-4 rounded-xl">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-blue-500 bg-opacity-20 rounded-full">
+                <i class="fas fa-coins text-blue-400"></i>
+            </div>
+            <div>
+                <div class="flex items-center">
+                    <span class="text-white font-medium">Credits: </span>
+                    <span id="creditAmount" class="ml-2 text-blue-400 font-bold">{{ credits }}</span>
+                    {% if is_trial %}
+                    <span class="ml-2 px-2 py-0.5 bg-green-500 bg-opacity-20 text-green-400 text-xs rounded-full">Trial</span>
+                    {% endif %}
+                </div>
+                <div class="text-gray-400 text-sm">1 credit = 1 service use</div>
+            </div>
+        </div>
+        <button id="buyCreditsBtn" onclick="openBuyCreditsModal()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1 text-sm">
+            <i class="fas fa-plus-circle"></i>
+            <span>Buy Credits</span>
+        </button>
+    </div>
+</div>
+
+<!-- Credits Purchase Modal -->
+<div id="buyCreditsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="glass-effect p-6 rounded-xl max-w-md w-full">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Purchase Credits</h3>
+            <button onclick="closeBuyCreditsModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-gray-300 mb-2">Select the number of credits you want to purchase:</p>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <button class="credit-option p-2 bg-gray-800 hover:bg-blue-600 rounded-lg transition-colors" data-amount="10">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-white">10</div>
+                        <div class="text-sm text-gray-400">₹1000</div>
+                    </div>
+                </button>
+                <button class="credit-option p-2 bg-gray-800 hover:bg-blue-600 rounded-lg transition-colors" data-amount="50">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-white">50</div>
+                        <div class="text-sm text-gray-400">₹5000</div>
+                    </div>
+                </button>
+                <button class="credit-option p-2 bg-gray-800 hover:bg-blue-600 rounded-lg transition-colors" data-amount="100">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-white">100</div>
+                        <div class="text-sm text-gray-400">₹10000</div>
+                    </div>
+                </button>
+            </div>
+            
+            <div class="flex items-center mb-4">
+                <span class="text-gray-300 mr-2">Custom amount:</span>
+                <input type="number" id="customCreditAmount" min="1" placeholder="Enter credits" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white w-24">
+            </div>
+            
+            <div class="text-gray-400 text-sm mb-4">
+                <p>• 1 credit = ₹100</p>
+                <p>• Each credit lets you use one service once</p>
+                <p>• Credits never expire</p>
+            </div>
+        </div>
+        
+        <button id="proceedToPaymentBtn" class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+            Proceed to Payment
+        </button>
+    </div>
+</div>
+
+<!-- Payment Processing Modal -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="glass-effect p-6 rounded-xl max-w-md w-full">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Complete Payment</h3>
+            <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="razorpay-container"></div>
+        
+        <div class="text-center text-sm text-gray-400 mt-4">
+            <p>Secure payment powered by Razorpay</p>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Success Modal -->
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="glass-effect p-6 rounded-xl max-w-md w-full text-center">
+        <div class="mb-4 text-green-500 text-5xl">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Payment Successful!</h3>
+        <p class="text-gray-300 mb-4">Your credits have been added to your account.</p>
+        <button onclick="closeSuccessModal()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+            Continue
+        </button>
+    </div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    let selectedCredits = 0;
+    let razorpayOrderId = '';
+    
+    // Select credit amount
+    document.querySelectorAll('.credit-option').forEach(option => {
+        option.addEventListener('click', function() {
+            selectedCredits = parseInt(this.getAttribute('data-amount'));
+            document.querySelectorAll('.credit-option').forEach(opt => {
+                opt.classList.remove('bg-blue-600');
+                opt.classList.add('bg-gray-800');
+            });
+            this.classList.remove('bg-gray-800');
+            this.classList.add('bg-blue-600');
+            document.getElementById('customCreditAmount').value = '';
+        });
+    });
+    
+    // Handle custom amount input
+    document.getElementById('customCreditAmount').addEventListener('input', function() {
+        if (this.value) {
+            selectedCredits = parseInt(this.value);
+            document.querySelectorAll('.credit-option').forEach(opt => {
+                opt.classList.remove('bg-blue-600');
+                opt.classList.add('bg-gray-800');
+            });
+        }
+    });
+    
+    // Open and close modals
+    function openBuyCreditsModal() {
+        document.getElementById('buyCreditsModal').classList.remove('hidden');
+    }
+    
+    function closeBuyCreditsModal() {
+        document.getElementById('buyCreditsModal').classList.add('hidden');
+    }
+    
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.add('hidden');
+    }
+    
+    function closeSuccessModal() {
+        document.getElementById('successModal').classList.add('hidden');
+        // Refresh the page to update credit display
+        window.location.reload();
+    }
+    
+    // Get CSRF token from cookie if needed
+    function getCsrfToken() {
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf_access_token='))
+            ?.split('=')[1];
+        return cookieValue || '';
+    }
+    
+    document.getElementById('proceedToPaymentBtn').addEventListener('click', async function() {
+        const selectedOption = document.querySelector('.credit-option.bg-blue-600');
+        const customInput = document.getElementById('customCreditAmount');
+        let selectedCredits = 0;
+        
+        if (selectedOption) {
+            selectedCredits = parseInt(selectedOption.getAttribute('data-amount'));
+        } else if (customInput.value) {
+            selectedCredits = parseInt(customInput.value);
+        }
+        
+        if (!selectedCredits || selectedCredits <= 0) {
+            alert('Please select a valid credit amount');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/credit/create-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken() // Add CSRF token if needed
+                },
+                credentials: 'same-origin', // This ensures cookies are sent with the request
+                body: JSON.stringify({
+                    amount: selectedCredits
+                })
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Handle authentication error - redirect to login
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = '/login';
+                    return;
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create order');
+            }
+            
+            const data = await response.json();
+            
+            if (data.order_id) {
+                // Show payment processing screen
+                closeBuyCreditsModal();
+                document.getElementById('paymentModal').classList.remove('hidden');
+                
+                // Initialize Razorpay
+                const options = {
+                    key: 'rzp_test_CVbypqu6YtbzvT',
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'ForensicFlow',
+                    description: `Purchase ${selectedCredits} credits`,
+                    order_id: data.order_id,
+                    handler: function(response) {
+                        verifyPayment(response, selectedCredits);
+                    },
+                    prefill: {
+                        name: '',
+                        email: '',
+                        contact: ''
+                    },
+                    theme: {
+                        color: '#3399cc'
+                    }
+                };
+                
+                const rzp = new Razorpay(options);
+                rzp.open();
+                
+            } else {
+                alert('Failed to create order. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error creating order:', error);
+            alert('An error occurred while processing your request: ' + error.message);
+        }
+    });
+    
+    // Update verifyPayment function to include credentials
+    async function verifyPayment(response, credits) {
+        try {
+            const verifyResponse = await fetch('/api/credit/verify-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin', // This ensures cookies are sent with the request
+                body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                    credits: credits
+                })
+            });
+            
+            const data = await verifyResponse.json();
+            
+            if (verifyResponse.ok) {
+                // Close payment modal and show success
+                closePaymentModal();
+                document.getElementById('successModal').classList.remove('hidden');
+                
+                // Update credit display
+                document.getElementById('creditAmount').textContent = data.credits;
+            } else {
+                alert(data.error || 'Payment verification failed');
+            }
+        } catch (error) {
+            console.error('Error verifying payment:', error);
+            alert('An error occurred while verifying your payment');
+        }
+    }
+    
+    // Update checkCredits function to include credentials
+    async function checkCredits(requiredCredits = 1) {
+        try {
+            const response = await fetch('/api/credit/balance', {
+                credentials: 'same-origin' // This ensures cookies are sent with the request
+            });
+            
+            if (response.status === 401) {
+                // Handle authentication error
+                alert('Your session has expired. Please log in again.');
+                window.location.href = '/login';
+                return false;
+            }
+            
+            const data = await response.json();
+            
+            if (data.credits < requiredCredits) {
+                openBuyCreditsModal();
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Error checking credits:', error);
+            return false;
+        }
+    }
+</script> 

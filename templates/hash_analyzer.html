@@ -72,6 +72,9 @@
             <!-- Main Content -->
             <div class="container mx-auto px-6 py-8">
                 <div class="max-w-4xl mx-auto">
+                    <!-- Include Credit Status Component -->
+                    {% include 'credit_status.html' %}
+                
                     <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold gradient-text mb-2">Hash Generator</h2>
                         <p class="text-gray-400">Generate secure hashes for files and text</p>
@@ -133,42 +136,40 @@
                                 <p class="text-gray-300">Drag and drop or click to select a file</p>
                                 <p class="text-sm text-gray-500 mt-2">Maximum file size: 10MB</p>
                             </label>
-                            <div id="fileInfo" class="hidden mt-4 text-left bg-gray-800 p-4 rounded-lg">
-                                <p class="text-sm text-gray-300">Selected file: <span id="fileName" class="text-blue-400"></span></p>
-                                <p class="text-sm text-gray-300">Size: <span id="fileSize" class="text-blue-400"></span></p>
+                        </div>
+                        <div id="fileInfo" class="bg-gray-800/50 p-4 rounded-lg mb-4 hidden">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                                <div>
+                                    <p id="fileName" class="text-white"></p>
+                                    <p id="fileSize" class="text-gray-400 text-sm"></p>
+                                </div>
                             </div>
                         </div>
                         <button onclick="generateFileHash()" 
                             class="bg-blue-600 px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 text-white">
-                            <i class="fas fa-calculator"></i>
-                            <span>Generate Hash</span>
+                            <i class="fas fa-file-signature"></i>
+                            <span>Hash File</span>
                         </button>
                     </div>
 
                     <!-- Results -->
-                    <div id="results" class="hidden">
-                        <div class="bg-gray-800 rounded-2xl p-8">
-                            <h3 class="text-2xl font-bold text-blue-400 mb-6 flex items-center">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                Hash Results
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="p-4 bg-gray-900 rounded-lg">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-gray-400">Algorithm:</span>
-                                        <span id="hashType" class="text-blue-400"></span>
-                                    </div>
-                                    <div class="hash-result bg-gray-950 p-4 rounded-lg text-green-400 font-mono break-all">
-                                        <span id="hashResult"></span>
-                                    </div>
-                                </div>
-                                <button onclick="copyHash()" 
-                                    class="w-full bg-gray-700 px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center space-x-2 text-white">
-                                    <i class="fas fa-copy"></i>
-                                    <span>Copy Hash</span>
-                                </button>
-                            </div>
+                    <div id="results" class="glass-effect p-8 rounded-2xl mb-8 hidden">
+                        <h3 class="text-xl font-semibold text-white mb-4 flex items-center">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            Hash Result
+                        </h3>
+                        <div class="mb-4">
+                            <p class="text-gray-400">Algorithm: <span id="hashType" class="text-white"></span></p>
                         </div>
+                        <div class="bg-gray-800/50 p-4 rounded-lg mb-4 overflow-x-auto">
+                            <p id="hashResult" class="hash-result text-blue-400 break-all"></p>
+                        </div>
+                        <button onclick="copyHash()" 
+                            class="bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2 text-white">
+                            <i class="fas fa-copy"></i>
+                            <span>Copy to Clipboard</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -177,22 +178,34 @@
 
     <script>
         let currentHashType = 'sha256';
-        
+
+        // Highlight selected hash type button
         function setHashType(type) {
             currentHashType = type;
             document.querySelectorAll('.hash-type-btn').forEach(btn => {
                 btn.classList.remove('bg-blue-600');
                 btn.classList.add('bg-gray-800');
             });
-            event.currentTarget.classList.remove('bg-gray-800');
-            event.currentTarget.classList.add('bg-blue-600');
+            document.querySelector(`button[onclick="setHashType('${type}')"]`).classList.add('bg-blue-600');
+            document.querySelector(`button[onclick="setHashType('${type}')"]`).classList.remove('bg-gray-800');
         }
 
-        function generateTextHash() {
-            const text = document.getElementById('textInput').value;
+        // Initialize with SHA256 selected
+        window.onload = function() {
+            setHashType('sha256');
+        };
+
+        // Generate hash for text input
+        async function generateTextHash() {
+            const text = document.getElementById('textInput').value.trim();
             if (!text) {
                 alert('Please enter some text');
                 return;
+            }
+            
+            // Check if user has sufficient credits
+            if (!await checkCredits(1)) {
+                return; // Stop if not enough credits
             }
 
             let hash;
@@ -215,6 +228,12 @@
             }
 
             showResults(hash.toString());
+            
+            // Update credit display
+            const creditAmount = document.getElementById('creditAmount');
+            if (creditAmount) {
+                creditAmount.textContent = parseInt(creditAmount.textContent) - 1;
+            }
         }
 
         const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
@@ -250,7 +269,7 @@
             }
         }
 
-        function generateFileHash() {
+        async function generateFileHash() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
             
@@ -263,6 +282,11 @@
                 alert('File is too large. Maximum size is 10MB.');
                 return;
             }
+            
+            // Check if user has sufficient credits
+            if (!await checkCredits(1)) {
+                return; // Stop if not enough credits
+            }
 
             // Show loading state
             const hashResult = document.getElementById('hashResult');
@@ -270,7 +294,7 @@
             document.getElementById('results').classList.remove('hidden');
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 let hash;
                 const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
                 
@@ -293,6 +317,30 @@
                 }
 
                 showResults(hash.toString());
+                
+                // Use credits via API to ensure database is updated
+                try {
+                    const response = await fetch('/api/credit/use', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken() // Add CSRF token if needed
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ amount: 1 })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Update credit display
+                        const creditAmount = document.getElementById('creditAmount');
+                        if (creditAmount) {
+                            creditAmount.textContent = data.credits;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating credits:', error);
+                }
             };
 
             reader.onerror = function() {
@@ -335,6 +383,15 @@
                 handleFile(file);
             }
         });
+
+        // Helper function to get CSRF token
+        function getCsrfToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrf_access_token='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
     </script>
 </body>
 </html> 

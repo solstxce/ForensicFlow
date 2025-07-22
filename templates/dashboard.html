@@ -63,6 +63,9 @@
             <span class="gradient-text">Welcome to Your Dashboard</span>
         </h2>
 
+        <!-- Include Credit Status Component -->
+        {% include 'credit_status.html' %}
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- User Information Card -->
             <div class="glass-effect p-6 rounded-2xl service-card">
@@ -98,7 +101,7 @@
                 </div>
                 <p class="text-gray-300 mb-4">Advanced email forensics tool with AI-powered anomaly detection.</p>
                 <div class="flex justify-between items-center">
-                    <a href="http://localhost:5001/" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors">Launch</a>
+                    <a href="/ea-dashboard" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors">Launch</a>
                     <span class="text-green-400"><i class="fas fa-check-circle"></i> Active</span>
                 </div>
             </div>
@@ -116,7 +119,7 @@
                 </div>
                 <p class="text-gray-300 mb-4">Enterprise-grade file recovery with chain of custody tracking.</p>
                 <div class="flex justify-between items-center">
-                    <a href="#" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors">Launch</a>
+                    <a href="/file-recovery-lab" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-colors">Launch</a>
                     <span class="text-green-400"><i class="fas fa-check-circle"></i> Active</span>
                 </div>
             </div>

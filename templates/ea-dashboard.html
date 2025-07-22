@@ -6,18 +6,170 @@
     <title>ForensicFlow Email Analysis Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-effect {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #3498db;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Style for AI analysis */
+        .prose-invert {
+            color: #e2e8f0;
+        }
+        
+        .prose-invert h1, .prose-invert h2, .prose-invert h3 {
+            color: #90cdf4;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .prose-invert p {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .prose-invert ul {
+            list-style-type: disc;
+            padding-left: 1.5em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .prose-invert ol {
+            list-style-type: decimal;
+            padding-left: 1.5em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .highlight-text {
+            background-color: rgba(246, 173, 85, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        /* Crystal loader animation */
+
+
+        .crystal-loader {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            perspective: 800px;
+        }
+
+        .crystal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            opacity: 0;
+            transform-origin: bottom center;
+            transform: translate(-50%, -50%) rotateX(45deg) rotateZ(0deg);
+            animation: spin-crystal 4s linear infinite, emerge 2s ease-in-out infinite alternate,
+                fadeIn 0.3s ease-out forwards;
+            border-radius: 10px;
+            visibility: hidden;
+        }
+
+        @keyframes spin-crystal {
+            from {
+                transform: translate(-50%, -50%) rotateX(45deg) rotateZ(0deg);
+            }
+            to {
+                transform: translate(-50%, -50%) rotateX(45deg) rotateZ(360deg);
+            }
+        }
+
+        @keyframes emerge {
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                visibility: visible;
+                opacity: 0.8;
+            }
+        }
+
+        .crystal:nth-child(1) {
+            background: linear-gradient(45deg, #FFFFFF, #F5F5F5);
+            animation-delay: 0s;
+        }
+
+        .crystal:nth-child(2) {
+            background: linear-gradient(45deg, #F8F8F8, #EFEFEF);
+            animation-delay: 0.3s;
+        }
+
+        .crystal:nth-child(3) {
+            background: linear-gradient(45deg, #F0F0F0, #E8E8E8);
+            animation-delay: 0.6s;
+        }
+
+        .crystal:nth-child(4) {
+            background: linear-gradient(45deg, #E5E5E5, #DCDCDC);
+            animation-delay: 0.9s;
+        }
+
+        .crystal:nth-child(5) {
+            background: linear-gradient(45deg, #DCDCDC, #D3D3D3);
+            animation-delay: 1.2s;
+        }
+
+        .crystal:nth-child(6) {
+            background: linear-gradient(45deg, #D3D3D3, #C8C8C8);
+            animation-delay: 1.5s;
+        }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col">
-    <nav class="bg-gray-800 py-4">
-        <div class="container mx-auto px-4">
-            <h1 class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
+<body class="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <nav class="glass-effect sticky top-0 z-50 px-6 py-4 border-b border-white/[0.05]">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-envelope text-blue-500 text-2xl"></i>
+                <h1 class="text-3xl font-bold text-blue-500">ForensicFlow</h1>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="/dashboard" class="text-gray-300 hover:text-white transition-colors flex items-center space-x-2">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
         </div>
     </nav>
 
     <div class="container mx-auto px-4 py-8 flex-grow">
         <h2 class="text-4xl font-bold mb-6 text-center text-white">Email Analysis Dashboard</h2>
 
-        <div class="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+        <!-- Include Credit Status Component -->
+        {% include 'credit_status.html' %}
+
+        <div class="glass-effect p-6 rounded-lg shadow-md mb-6">
             <h3 class="text-xl font-semibold mb-4 text-blue-400">Upload Email for Analysis</h3>
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="mb-4">
@@ -30,7 +182,7 @@
             </form>
         </div>
 
-        <div id="analysisResult" class="bg-gray-800 p-6 rounded-lg shadow-md hidden">
+        <div id="analysisResult" class="glass-effect p-6 rounded-lg shadow-md hidden">
             <h3 class="text-xl font-semibold mb-4 text-blue-400">Analysis Result</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -48,6 +200,30 @@
                 </div>
             </div>
             <div class="mt-6">
+                <h4 class="text-xl font-semibold mb-4 text-blue-400">AI-Powered Analysis</h4>
+                <div id="geminiAnalysis" class="bg-gray-700/50 p-4 rounded-lg">
+                    <div id="geminiLoading" class="text-center py-4">
+                        <p class="mb-6">Waiting for AI analysis results...</p>
+                        <div class="container">
+                            <div class="crystal-loader">
+                                <div class="crystal"></div>
+                                <div class="crystal"></div>
+                                <div class="crystal"></div>
+                                <div class="crystal"></div>
+                                <div class="crystal"></div>
+                                <div class="crystal"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="geminiResult" class="hidden">
+                        <div id="geminiContent" class="prose prose-invert max-w-none"></div>
+                    </div>
+                    <div id="geminiError" class="hidden">
+                        <p class="text-red-400">AI analysis unavailable: <span id="geminiErrorMessage"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6">
                 <h4 class="text-lg font-semibold mb-2">Headers</h4>
                 <pre id="emailHeaders" class="bg-gray-700 p-4 rounded-lg overflow-x-auto text-sm"></pre>
             </div>
@@ -61,36 +237,171 @@
     </footer>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login';
-        }
-
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
             const formData = new FormData();
             const fileInput = document.getElementById('emailFile');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select an email file');
+                return;
+            }
+            
             formData.append('file', fileInput.files[0]);
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            
+            // Replace button text with crystal loader
+            submitButton.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <span class="mr-2">Analyzing</span>
+                    <div class="crystal-loader" style="width:24px; height:24px; transform: scale(0.25);">
+                        <div class="crystal"></div>
+                        <div class="crystal"></div>
+                        <div class="crystal"></div>
+                    </div>
+                </div>
+            `;
 
-            axios.post('/api/email/analyze', formData)
-                .then(response => {
-                    const result = response.data;
-                    document.getElementById('emailSubject').textContent = result.subject;
-                    document.getElementById('emailFrom').textContent = result.from;
-                    document.getElementById('emailTo').textContent = result.to;
-                    document.getElementById('emailDate').textContent = result.date;
-                    document.getElementById('spfResult').textContent = result.spf_result;
-                    document.getElementById('dkimResult').textContent = result.dkim_result;
-                    document.getElementById('dmarcResult').textContent = result.dmarc_result;
-                    document.getElementById('emailHeaders').textContent = JSON.stringify(result.all_headers, null, 2);
-                    document.getElementById('analysisResult').classList.remove('hidden');
-                })
-                .catch(error => {
-                    console.error('Error analyzing email:', error);
-                    alert('Failed to analyze email');
+            try {
+                const response = await fetch('/api/email/analyze', {
+                    method: 'POST',
+                    body: formData
                 });
+                
+                if (response.status === 402) {
+                    // Not enough credits
+                    alert('You need more credits to use this service');
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Analyze Email';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error('Failed to analyze email');
+                }
+                
+                const result = await response.json();
+                
+                // Update credit display if provided in the response
+                if (result.credits_remaining !== undefined) {
+                    const creditAmount = document.getElementById('creditAmount');
+                    if (creditAmount) {
+                        creditAmount.textContent = result.credits_remaining;
+                    }
+                }
+                
+                // Display basic email details
+                document.getElementById('emailSubject').textContent = result.subject;
+                document.getElementById('emailFrom').textContent = result.from;
+                document.getElementById('emailTo').textContent = result.to;
+                document.getElementById('emailDate').textContent = result.date;
+                
+                // Display security results
+                document.getElementById('spfResult').textContent = result.spf_result;
+                document.getElementById('dkimResult').textContent = result.dkim_result;
+                document.getElementById('dmarcResult').textContent = result.dmarc_result;
+                
+                // Add more detailed security information
+                const securityChecksDiv = document.querySelector('#analysisResult div:nth-child(2)');
+                
+                // Clear any previous additional elements
+                const existingThreatLevel = document.getElementById('threatLevelIndicator');
+                if (existingThreatLevel) {
+                    existingThreatLevel.remove();
+                }
+                
+                // Add threat level indicator
+                const threatLevelHtml = `
+                    <div id="threatLevelIndicator" class="mt-4 p-3 rounded-lg ${
+                        result.threat_level === 'High' ? 'bg-red-800' : 
+                        result.threat_level === 'Medium' ? 'bg-yellow-700' : 'bg-green-800'
+                    }">
+                        <p class="font-bold">Threat Level: ${result.threat_level}</p>
+                        ${result.security_issues && result.security_issues.length > 0 ? 
+                            `<ul class="mt-2 list-disc pl-5">
+                                ${result.security_issues.map(issue => `<li>${issue}</li>`).join('')}
+                            </ul>` : 
+                            '<p>No security issues detected</p>'
+                        }
+                    </div>
+                `;
+                securityChecksDiv.insertAdjacentHTML('beforeend', threatLevelHtml);
+                
+                // Show suspicious URLs if any
+                if (result.suspicious_urls && result.suspicious_urls.length > 0) {
+                    const suspiciousUrlsHtml = `
+                        <div class="mt-4">
+                            <h4 class="text-lg font-semibold mb-2 text-red-400">Suspicious URLs Detected</h4>
+                            <ul class="list-disc pl-5">
+                                ${result.suspicious_urls.map(url => `<li class="break-all">${url}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    securityChecksDiv.insertAdjacentHTML('beforeend', suspiciousUrlsHtml);
+                }
+                
+                // Display reply-to mismatch warning if present
+                if (result.reply_to_mismatch) {
+                    const replyToWarningHtml = `
+                        <div class="mt-4 p-3 bg-red-800 rounded-lg">
+                            <p><strong>Warning:</strong> Reply-To address (${result.reply_to}) doesn't match sender domain.</p>
+                        </div>
+                    `;
+                    securityChecksDiv.insertAdjacentHTML('beforeend', replyToWarningHtml);
+                }
+                
+                // Handle Gemini AI analysis results
+                const geminiLoading = document.getElementById('geminiLoading');
+                const geminiResult = document.getElementById('geminiResult');
+                const geminiError = document.getElementById('geminiError');
+                const geminiContent = document.getElementById('geminiContent');
+                const geminiErrorMessage = document.getElementById('geminiErrorMessage');
+                
+                if (result.gemini_analysis) {
+                    if (result.gemini_analysis.success) {
+                        // Format and display the AI analysis with Markdown-like conversion
+                        let formattedAnalysis = result.gemini_analysis.analysis
+                            .replace(/\n\n/g, '<br><br>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/^(\d+\.\s.*?)$/gm, '<p class="ml-4">$1</p>')
+                            .replace(/(spam|phishing|malicious|suspicious)/gi, '<span class="highlight-text">$1</span>');
+                            
+                        geminiContent.innerHTML = formattedAnalysis;
+                        geminiLoading.classList.add('hidden');
+                        geminiResult.classList.remove('hidden');
+                        geminiError.classList.add('hidden');
+                    } else {
+                        // Show error message
+                        geminiErrorMessage.textContent = result.gemini_analysis.message || 'Unknown error';
+                        geminiLoading.classList.add('hidden');
+                        geminiResult.classList.add('hidden');
+                        geminiError.classList.remove('hidden');
+                    }
+                } else {
+                    // No AI analysis available
+                    geminiErrorMessage.textContent = 'Analysis not available';
+                    geminiLoading.classList.add('hidden');
+                    geminiResult.classList.add('hidden');
+                    geminiError.classList.remove('hidden');
+                }
+                
+                // Display headers
+                document.getElementById('emailHeaders').textContent = JSON.stringify(result.all_headers, null, 2);
+                
+                // Show the analysis result section
+                document.getElementById('analysisResult').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error analyzing email:', error);
+                alert('Failed to analyze email: ' + error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Analyze Email';
+            }
         });
     </script>
 </body>

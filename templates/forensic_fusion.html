@@ -76,6 +76,9 @@
             <!-- Main Content -->
             <div class="container mx-auto px-6 py-8">
                 <div class="max-w-4xl mx-auto">
+                    <!-- Include Credit Status Component -->
+                    {% include 'credit_status.html' %}
+                    
                     <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold gradient-text mb-2">Crime Scene Analysis</h2>
                         <p class="text-gray-400">Upload images for AI-powered forensic analysis</p>
@@ -129,7 +132,7 @@
                     <div id="results" class="mt-8 hidden">
                         <div class="glass-effect rounded-2xl p-8">
                             <h3 class="text-2xl font-bold mb-6 gradient-text">Analysis Results</h3>
-                            <div id="detectedObjects" class="mb-8">
+                            <div id="detectedObjects" class="mb-8 text-gray-200">
                                 <div id="objectList" class="space-y-4"></div>
                             </div>
                             <div id="processedImage">
@@ -183,7 +186,7 @@
             
             if (isRobberyScene) {
                 objectList.innerHTML = `
-                    <div class="space-y-4">
+                    <div class="space-y-4 text-gray-200">
                         <div class="p-4 bg-blue-900/40 rounded-lg border border-blue-800">
                             <h4 class="font-semibold mb-2 flex items-center">
                                 <i class="fas fa-info-circle text-blue-400 mr-2"></i>
@@ -202,16 +205,16 @@
                             <span class="text-green-400">Confidence: 85%</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-                            <span class="flex items-center"><i class="fas fa-hammer text-yellow-400 mr-2"></i>Weapon (Crowbar)</span>
-                            <span class="text-red-400">Confidence: 57%(Low)</span>
+                            <span class="flex items-center"><i class="fas fa-video-slash text-red-400 mr-2"></i>Disabled Security Camera</span>
+                            <span class="text-green-400">Confidence: 92%</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-                            <span class="flex items-center"><i class="fas fa-video text-gray-400 mr-2"></i>Security Camera (Damaged)</span>
-                            <span class="text-yellow-400">Confidence: 74%</span>
+                            <span class="flex items-center"><i class="fas fa-toolbox text-yellow-400 mr-2"></i>Tools (Crowbar, Wirecutters)</span>
+                            <span class="text-green-400">Confidence: 87%</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-gray-800 rounded-lg">
-                            <span class="flex items-center"><i class="fas fa-shoe-prints text-blue-400 mr-2"></i>Footprint Pattern (Multiple)</span>
-                            <span class="text-red-400">Confidence: 49%(Too Low)</span>
+                            <span class="flex items-center"><i class="fas fa-shoe-prints text-yellow-400 mr-2"></i>Footprints (Multiple patterns)</span>
+                            <span class="text-yellow-400">Confidence: 78%</span>
                         </div>
 
                         <div class="mt-6 p-6 bg-gray-800 rounded-lg">
@@ -244,7 +247,7 @@
                     </div>`;
             } else {
                 objectList.innerHTML = `
-                    <div class="space-y-4">
+                    <div class="space-y-4 text-gray-200">
                         <div class="p-4 bg-blue-900/40 rounded-lg border border-blue-800">
                             <h4 class="font-semibold mb-2 flex items-center">
                                 <i class="fas fa-info-circle text-blue-400 mr-2"></i>
@@ -310,15 +313,24 @@
             }
         }
 
-        // Update the form submit handler
+        // Update the form submit handler to use credit API
         document.getElementById('analysisForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Check if user has sufficient credits
+            if (!await checkCredits(1)) {
+                return; // Stop if not enough credits
+            }
             
             const submitButton = this.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = 'Analyzing...';
 
-            setTimeout(() => {
+            // Current timestamp
+            imageMetadata.timestamp = new Date().toISOString();
+            imageMetadata.lightCondition = 'Daylight';
+
+            setTimeout(async () => {
                 document.getElementById('results').classList.remove('hidden');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Analyze Scene';
@@ -333,8 +345,41 @@
                         <p class="text-sm mt-2">(Image processing visualization would appear here)</p>
                     </div>
                 `;
+                
+                // Use credits via API to ensure database is updated
+                try {
+                    const response = await fetch('/api/credit/use', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken() // Add CSRF token if needed
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ amount: 1 })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Update credit display
+                        const creditAmount = document.getElementById('creditAmount');
+                        if (creditAmount) {
+                            creditAmount.textContent = data.credits;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating credits:', error);
+                }
             }, 2000);
         });
+        
+        // Helper function to get CSRF token
+        function getCsrfToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrf_access_token='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
     </script>
 
     <!-- Add this script section after your existing script -->
