@@ -136,5 +136,5 @@ This project is for educational and research purposes only.
 ---
 
 <p align="center">
-  <b>© 2024 ForensicFlow. All rights reserved.</b>
+  <b>© 2025 ForensicFlow. All rights reserved.</b>
 </p>
